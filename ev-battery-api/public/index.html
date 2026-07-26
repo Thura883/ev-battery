@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Battery Blockchain UI</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f9f4; color: #333; }
+        h2 { color: #2e7d32; text-align: center; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 280px; border-top: 4px solid #4caf50; }
+        .card h3 { color: #388e3c; margin-top: 0; font-size: 18px; }
+        input { display: block; width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #388e3c; }
+        #resultBox { max-width: 600px; margin: 30px auto; background: #1e1e1e; color: #4caf50; padding: 15px; font-family: monospace; white-space: pre-wrap; border-radius: 5px; min-height: 80px; }
+    </style>
+</head>
+<body>
+    <h2>🔋 EV Battery Blockchain Lifecycle</h2>
+
+    <div class="container">
+        <!-- 1. Mint -->
+        <div class="card">
+            <h3>1. Mint Mined Materials</h3>
+            <input type="text" id="mintId" placeholder="Battery ID (e.g. BAT002)">
+            <input type="text" id="mintSource" placeholder="Mine Source (e.g. Congo)">
+            <input type="number" id="mintCarbon" placeholder="Carbon Emission (e.g. 50)">
+            <button onclick="sendRequest('/api/mint', {id: document.getElementById('mintId').value, source: document.getElementById('mintSource').value, carbonEmission: document.getElementById('mintCarbon').value})">Mint</button>
+        </div>
+
+        <!-- 2. Manufacture (အသစ်ထည့်ထားသည်) -->
+        <div class="card">
+            <h3>2. Manufacture Battery</h3>
+            <input type="text" id="mfgId" placeholder="Battery ID (e.g. BAT002)">
+            <input type="text" id="mfgName" placeholder="Manufacturer (e.g. Tesla)">
+            <input type="number" id="mfgCarbon" placeholder="Added Carbon (e.g. 20)">
+            <button onclick="sendRequest('/api/manufacture', {id: document.getElementById('mfgId').value, manufacturerName: document.getElementById('mfgName').value, addedCarbon: document.getElementById('mfgCarbon').value})">Manufacture</button>
+        </div>
+
+        <!-- 3. Link Vehicle -->
+        <div class="card">
+            <h3>3. Link to Vehicle</h3>
+            <input type="text" id="transferId" placeholder="Battery ID">
+            <input type="text" id="newVin" placeholder="Vehicle VIN">
+            <button onclick="sendRequest('/api/transfer', {id: document.getElementById('transferId').value, vin: document.getElementById('newVin').value})">Link Vehicle</button>
+        </div>
+
+        <!-- 4. Recycle -->
+        <div class="card">
+            <h3>4. Recycle Battery</h3>
+            <input type="text" id="recycleId" placeholder="Battery ID">
+            <button onclick="sendRequest('/api/recycle', {id: document.getElementById('recycleId').value})">Recycle</button>
+        </div>
+
+        <!-- 5. Query -->
+        <div class="card">
+            <h3>5. Read Battery Data</h3>
+            <input type="text" id="queryId" placeholder="Battery ID">
+            <button onclick="queryBattery()">Search</button>
+        </div>
+    </div>
+
+    <div id="resultBox">System Ready... Waiting for action.</div>
+
+    <script>
+        const resultBox = document.getElementById('resultBox');
+
+        async function sendRequest(endpoint, bodyData) {
+            if(!bodyData.id) {
+                resultBox.style.color = "red";
+                resultBox.innerText = "Error: Please enter Battery ID";
+                return;
+            }
+            resultBox.style.color = "#ffa500";
+            resultBox.innerText = "Processing on Blockchain... Please wait.";
+            try {const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+                const data = await res.json();
+                resultBox.style.color = data.error ? "red" : "#4caf50";
+                resultBox.innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                resultBox.style.color = "red";
+                resultBox.innerText = "Error: " + err.message;
+            }
+        }
+
+        async function queryBattery() {
+            const id = document.getElementById('queryId').value;
+            if(!id) return;
+            resultBox.style.color = "#ffa500";
+            resultBox.innerText = "Searching... Please wait.";
+            try {
+                const res = await fetch(`/api/query/${id}`);
+                const data = await res.json();
+                resultBox.style.color = data.error ? "red" : "#4caf50";
+                resultBox.innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                resultBox.style.color = "red";
+                resultBox.innerText = "Error: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
